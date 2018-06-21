@@ -1,0 +1,93 @@
+<html>
+
+<head>
+    <script src="jquery.min.js"></script>
+    <script src="jquery.csv.js"></script>
+</head>
+
+<body>
+    <p>Select local CSV File:</p>
+    <input id="csv" type="file">
+
+    <div id="out">
+        file contents will appear here
+    </div>
+    <script type="application/javascript">
+        window.total_trips = 0;
+        window.optimal_trips = 0;
+        window.onload = function () {
+            if (window.jQuery) {
+
+
+                function updateTrips() {
+                    window.optimal_trips++;
+                    console.log("Total trips: " + window.total_trips);
+                    console.log("Optimal trips: " + window.optimal_trips);
+                };
+
+
+                function incrementTripCount() {
+                    window.total_trips++;
+                };
+
+
+                var fileInput = document.getElementById("csv");
+
+
+                function readFile() {
+                    var reader = new FileReader();
+                    reader.onload = function () {
+                        // console.log("Loading complete!")
+                        document.getElementById('out').innerHTML = reader.result;
+                        data = $.csv.toObjects(reader.result);
+                        // console.log(typeof data);
+                        //total_trips = data.length;
+                        for (var line = 0; line < data.length; line++) {
+                            trip = data[line];
+                            if (trip.trip_distance > 1) {
+                                incrementTripCount();
+                                isOptimalTrip(trip);
+                            }
+                            // $.when(isOptimalTrip(trip)).done(function(data) {
+                            //     if (data === true)
+                            //         window.optimal_trips++;
+                            // });
+                        }
+                    };
+                    reader.readAsBinaryString(fileInput.files[0]);
+                };
+
+
+                fileInput.addEventListener('change', readFile);
+
+                function isOptimalTrip(trip) {
+                    $.get({
+                        url: "https://maps.googleapis.com/maps/api/distancematrix/json",
+                        dataType: "json",
+                        data: {
+                            key: "AIzaSyAHNwn4PRwZRJgmA-7k_-N19NM7lEN1QEY",
+                            units: "imperial",
+                            origins: trip.pickup_latitude + "," + trip.pickup_longitude,
+                            destinations: trip.dropoff_latitude + "," + trip.dropoff_longitude
+                        },
+                        success: function (apiresponse) {
+                            // console.log(apiresponse);
+                            idealdistance = apiresponse.rows[0].elements[0].distance.value / 1000;
+                            actualdistance = 1.60934 * trip.trip_distance;
+                            //console.log(idealdistance);
+                            max_optimal_dist = idealdistance * 1.1;
+                            if (actualdistance < max_optimal_dist) {
+                                console.log("Actual Distance in miles : " + trip.trip_distance);
+                                console.log("Actual Distance : " + actualdistance + "; Optimal distance : " + max_optimal_dist);
+                                console.log("Optimal trip !")
+                                updateTrips();
+                            }
+                        }
+                    });
+                }
+
+
+            }
+        }
+    </script>
+</body>

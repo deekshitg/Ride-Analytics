@@ -1,0 +1,8 @@
+/target/
+.project
+.classpath
+.settings
+/bin/
+.idea
+rtree.iml
+/src/main/java/com/github/
