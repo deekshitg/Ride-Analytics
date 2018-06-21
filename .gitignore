@@ -1,5 +1,1 @@
-# Object file
-*.o
-
-# Ada Library Information
-*.ali
+/rtree-master/src/main/java/com/github/
